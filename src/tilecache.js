@@ -155,10 +155,11 @@ $.TileCache.prototype = {
         var cutoff = options.cutoff || 0;
         var insertionIndex = this._tilesLoaded.length;
 
-        var imageRecord = this._imagesLoaded[options.tile.url];
+        var key = options.tile.url + (options.tile.payload || '');
+        var imageRecord = this._imagesLoaded[key];
         if (!imageRecord) {
             $.console.assert( options.image, "[TileCache.cacheTile] options.image is required to create an ImageRecord" );
-            imageRecord = this._imagesLoaded[options.tile.url] = new ImageRecord({
+            imageRecord = this._imagesLoaded[key] = new ImageRecord({
                 image: options.image
             });
 
@@ -232,9 +233,9 @@ $.TileCache.prototype = {
     },
 
     // private
-    getImageRecord: function(url) {
+    getImageRecord: function(url, payload) {
         $.console.assert(url, '[TileCache.getImageRecord] url is required');
-        return this._imagesLoaded[url];
+        return this._imagesLoaded[url + (payload + '')];
     },
 
     // private
@@ -246,11 +247,12 @@ $.TileCache.prototype = {
         tile.unload();
         tile.cacheImageRecord = null;
 
-        var imageRecord = this._imagesLoaded[tile.url];
+        var key = tile.url + (tile.payload || '');
+        var imageRecord = this._imagesLoaded[key];
         imageRecord.removeTile(tile);
         if (!imageRecord.getTileCount()) {
             imageRecord.destroy();
-            delete this._imagesLoaded[tile.url];
+            delete this._imagesLoaded[key];
             this._imagesLoadedCount--;
         }
 

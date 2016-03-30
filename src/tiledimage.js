@@ -895,7 +895,7 @@ function updateViewport( tiledImage ) {
 
     // Load the new 'best' tile
     if (best && !best.context2D) {
-        loadTile( tiledImage, best, currentTime );
+        loadTile(tiledImage, best, currentTime);
     } else {
         /**
          * Fired every time the TiledImage is drawn when all the necessary tiles for the
@@ -1053,13 +1053,15 @@ function updateTile( tiledImage, drawLevel, haveDrawn, x, y, level, levelOpacity
         if (tile.context2D) {
             setTileLoaded(tiledImage, tile);
         } else {
-            var imageRecord = tiledImage._tileCache.getImageRecord(tile.url);
+            var imageRecord = tiledImage._tileCache.getImageRecord(tile.url, tile.payload);
             if (imageRecord) {
                 var image = imageRecord.getImage();
                 setTileLoaded(tiledImage, tile, image);
             }
         }
     }
+
+    tile.payload = tiledImage.source.payload;
 
     if ( tile.loaded ) {
         var needsDraw = blendTile(
@@ -1133,6 +1135,7 @@ function loadTile( tiledImage, tile, time ) {
     tile.loading = true;
     tiledImage._imageLoader.addJob({
         src: tile.url,
+        payload: tile.payload,
         crossOriginPolicy: tiledImage.crossOriginPolicy,
         callback: function( image, errorMsg ){
             onTileLoad( tiledImage, tile, time, image, errorMsg );

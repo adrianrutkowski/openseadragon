@@ -55,6 +55,7 @@ ImageJob.prototype = {
     start: function(){
         var _this = this;
 
+        this.xhr = new XMLHttpRequest();
         this.image = new Image();
 
         if ( this.crossOriginPolicy !== false ) {
@@ -74,13 +75,27 @@ ImageJob.prototype = {
             _this.finish( false );
         }, this.timeout);
 
-        this.image.src = this.src;
+        if (this.payload) {
+            this.xhr.open('POST', this.src, true);
+            this.xhr.responseType = 'arraybuffer';
+            this.xhr.setRequestHeader('X-PINGOTHER', 'pingpong');
+            this.xhr.onload = function() {
+                var data = arrayBufferToString(_this.xhr.response);
+                var base64 = window.btoa(data);
+                _this.image.src = 'data:image/png;base64,' + base64;
+            };
+
+            this.xhr.send(this.payload);
+        } else {
+            this.image.src = this.src;
+        }
     },
 
     finish: function( successful ) {
         this.image.onload = this.image.onerror = this.image.onabort = null;
         if (!successful) {
             this.image = null;
+            this.xhr.abort();
         }
 
         if ( this.jobId ) {
@@ -119,6 +134,7 @@ $.ImageLoader.prototype = {
      * @param {String} src - URL of image to download.
      * @param {String} crossOriginPolicy - CORS policy to use for downloads
      * @param {Function} callback - Called once image has been downloaded.
+     * @param {String} payload - Parameters that need to be send by using POST method.
      */
     addJob: function( options ) {
         var _this = this,
@@ -129,7 +145,8 @@ $.ImageLoader.prototype = {
                 src: options.src,
                 crossOriginPolicy: options.crossOriginPolicy,
                 callback: complete,
-                abort: options.abort
+                abort: options.abort,
+                payload: options.payload
             },
             newJob = new ImageJob( jobOptions );
 
@@ -181,3 +198,16 @@ function completeJob( loader, job, callback ) {
 }
 
 }( OpenSeadragon ));
+
+function arrayBufferToString(arrayBuffer) {
+    var uInt8Array = new Uint8Array(arrayBuffer);
+    var i = uInt8Array.length;
+    var binaryString = new Array(i);
+
+    while (i--)
+    {
+        binaryString[i] = String.fromCharCode(uInt8Array[i]);
+    }
+
+    return binaryString.join('');
+}
