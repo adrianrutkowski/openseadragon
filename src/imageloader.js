@@ -79,6 +79,7 @@ ImageJob.prototype = {
             this.xhr.open('POST', this.src, true);
             this.xhr.responseType = 'arraybuffer';
             this.xhr.setRequestHeader('X-PINGOTHER', 'pingpong');
+            this.xhr.setRequestHeader("Content-type", "application/json");
             this.xhr.onload = function() {
                 var data = arrayBufferToString(_this.xhr.response);
                 var base64 = window.btoa(data);
